@@ -3,9 +3,10 @@ import os
 import datetime
 from datetime import timedelta
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))    # ruta absoluta del archivo analyzer.py
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  
 DATA_DIR = os.path.join(BASE_DIR, "data")
 RAW_DIR = os.path.join(DATA_DIR, "raw")
+
 
 def load_logs(filename: str):
     path = os.path.join(RAW_DIR, filename)
