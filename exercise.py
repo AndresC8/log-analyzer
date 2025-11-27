@@ -18,9 +18,8 @@ def load_logs(filename: str):
     df = df.dropna(subset=["timestamp"])
     return df   
 
-def detect_bruteforce(df: pd.DataFrame, treshold: int = 5):
+def detect_bruteforce(df: pd.DataFrame, threshold: int = 5):
     failed = df[df["event_type"] == "login_failed"]
-
     if failed.empty:
         print("Empty")
         return pd.DataFrame()
@@ -31,8 +30,8 @@ def detect_bruteforce(df: pd.DataFrame, treshold: int = 5):
         .reset_index(name="failures")
     )
 
-    suspicius = counts[counts["failures"] >= treshold]
-    return suspicius
+    suspicious = counts[counts["failures"] >= threshold]
+    return suspicious
 
 def detect_port_scan(df, threshold=5):
 
@@ -42,7 +41,6 @@ def detect_port_scan(df, threshold=5):
 
     if probes.empty:
         return pd.DataFrame()  
-
 
     grouped = (
         probes.groupby(["source_ip", "host"])
@@ -56,7 +54,6 @@ def detect_port_scan(df, threshold=5):
     
 def main():
     df = load_logs("auth_log_with_portscan.csv")
-    
     alerts = detect_port_scan(df, threshold=5)
 
     if alerts.empty:
