@@ -1,7 +1,5 @@
 import pandas as pd
 import os
-import datetime
-from datetime import timedelta
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))  
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -44,7 +42,6 @@ def detect_port_scan(df, threshold=5):
 
     if probes.empty:
         return pd.DataFrame()  
-
 
     grouped = (
         probes.groupby(["source_ip", "host"])
