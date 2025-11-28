@@ -1,14 +1,9 @@
 from analyzer.loader import load_logs
-from analyzer.detections import detect_bruteforce
+from analyzer.detections import detect_portscan
 
 def main():
     df = load_logs("auth_log_with_portscan.csv")
-    alerts = detect_bruteforce(df)
-    if alerts.empty:
-        print("empty")
-    else:
-        print("Suspicious brute-force detctted")
-        print(alerts)
+    print(detect_portscan(df))
 
 if __name__  == "__main__":
     main()
