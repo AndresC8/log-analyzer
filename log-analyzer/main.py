@@ -1,6 +1,10 @@
-from analyzer import log_analyzer
+from analyzer.loader import load_logs
 
 def main():
-    log_filename = "auth_log_with_portscan.csv"
+    df = load_logs("auth_log_With_portscan.csv")
+    print(df.head())
 
-    pass
+
+
+if __name__  == "__main__":
+    main()

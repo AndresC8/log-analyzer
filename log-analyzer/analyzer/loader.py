@@ -12,7 +12,7 @@ def load_logs(filename: str):
 
     print(f"Loading logs from {path}")
     df = _read_raw_file(path)
-    df = clean_logs(path)
+    df = clean_logs(df)
 
     return df
 
