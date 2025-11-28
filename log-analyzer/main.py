@@ -1,9 +1,9 @@
 from analyzer.loader import load_logs
-from analyzer.detections import detect_portscan
+from analyzer.detections import detect_rarelogin
 
 def main():
     df = load_logs("auth_log_with_portscan.csv")
-    print(detect_portscan(df))
+    print(detect_rarelogin(df))
 
 if __name__  == "__main__":
     main()
