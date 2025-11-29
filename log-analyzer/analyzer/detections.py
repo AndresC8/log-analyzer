@@ -87,8 +87,8 @@ def detect_offhours(
     pd.DataFrame
         Subset of df with login_success events in the specified hour range
     """
-
     df = df.copy()
+
 
     df["hour"] = df["timestamp"].dt.hour
     

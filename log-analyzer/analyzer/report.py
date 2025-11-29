@@ -17,6 +17,7 @@ def _format_section(name: str, df: pd.DataFrame) -> list[str]:
     title = SECTION_TITLES.get(name, name.replace("_", " ").title())
     lines: list[str] = []
 
+
     lines.append(f"== {title} ==")
 
     if df is None:

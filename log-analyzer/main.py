@@ -1,7 +1,6 @@
 from analyzer.report import generate_report
 from analyzer.log_analyzer import LogAnalyzer
 from analyzer.paths import RAW_DIR
-from pathlib import Path
 
 def main():
     log_file = "auth_log_with_portscan.csv"
