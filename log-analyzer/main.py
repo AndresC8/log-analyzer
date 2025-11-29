@@ -1,9 +1,10 @@
 from analyzer.loader import load_logs
-from analyzer.detections import detect_rarelogin
+from analyzer.detections import detect_password_spraying
 
 def main():
     df = load_logs("auth_log_with_portscan.csv")
-    print(detect_rarelogin(df))
+    print(detect_password_spraying(df))
+
 
 if __name__  == "__main__":
     main()
