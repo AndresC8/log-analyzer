@@ -10,7 +10,6 @@ def load_logs(filename: str):
     if not os.path.exists(path):
         raise FileNotFoundError(f"Does not exists: {path}")
 
-    print(f"Loading logs from {path}")
     df = _read_raw_file(path)
     df = clean_logs(df)
 

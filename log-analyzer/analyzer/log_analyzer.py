@@ -11,6 +11,9 @@ from .detections import (
 
 
 class LogAnalyzer:
+
+    #Run multiple detections
+
     def __init__(self, df: pd.DataFrame):
         self.df = df
         
@@ -49,6 +52,9 @@ class LogAnalyzer:
         )
     
     def run_all_detections(self):
+
+        # Run all available detections and return a dict of DataFrames
+        
         return {
             "bruteforce": self.run_bruteforce_detection(),
             "succesful_bruteforce": self.run_succesful_bruteforce_detection(),

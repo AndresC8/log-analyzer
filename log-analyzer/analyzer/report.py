@@ -13,8 +13,6 @@ SECTION_TITLES: dict[str, str] = {
     "offhours": "Off-hours Logins",
     "password_spraying": "Password Spraying",
 }
-
-
 def _format_section(name: str, df: pd.DataFrame) -> list[str]:
     title = SECTION_TITLES.get(name, name.replace("_", " ").title())
     lines: list[str] = []
@@ -22,20 +20,19 @@ def _format_section(name: str, df: pd.DataFrame) -> list[str]:
     lines.append(f"== {title} ==")
 
     if df is None:
-        lines.append("No data provided for this detection.")
+        lines.append("No data provided for this detection")
         return lines
 
     if df.empty:
-        lines.append("No suspicious activity detected.")
+        lines.append("No suspicious activity detected")
         return lines
 
-    lines.append(f"{len(df)} suspicious record(s) detected.")
+    lines.append(f"{len(df)} suspicious detected.")
     lines.append("")  
 
     lines.append(df.to_string(index=False))
 
     return lines
-
 
 def generate_report(
     results: Mapping[str, pd.DataFrame],
@@ -71,4 +68,5 @@ def generate_report(
         lines.extend(section_lines)
 
     output_path.write_text("\n".join(lines), encoding="utf-8")
+
     return output_path

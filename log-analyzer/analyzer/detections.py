@@ -1,12 +1,38 @@
 import pandas as pd
 
 def detect_bruteforce(df: pd.DataFrame, threshold=5):
+
+    """
+    Detect IPs with repeated failed login attempts.
+
+    An IP is considered suspicious if it has at least `threshold`
+    events with event_type == "login_failed".
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame with columns like: source_ip, failures.
+    """
+
     failed = df[df["event_type"] == "login_failed"]
     failed_ips = failed.groupby("source_ip").size().reset_index(name="failures")
     suspicious = failed_ips[failed_ips["failures"] >= threshold]
     return suspicious
 
 def detect_succesful_bruteforce(df: pd.DataFrame, threshold: int =5):
+
+    """
+    Detect IPs that show brute force attempts followed by at least one successful login
+
+    An IP is considered suspicious if:
+    - it has at least `threshold` failed logins, and
+    - it also appears with event_type == "loginm_success"
+
+    Returns
+    pd.DataFrame
+        DataFrame with columns like: source_ip, failures etc
+    """
+
     failed = df[df["event_type"] == "login_failed"]
     failed_ips = failed.groupby("source_ip").size().reset_index(name="failures")
     
@@ -20,6 +46,16 @@ def detect_succesful_bruteforce(df: pd.DataFrame, threshold: int =5):
     return suspicious
 
 def detect_portscan(df: pd.DataFrame, threshold: int = 5):
+
+    """
+    Detect basic port scanning activity by counting port_probe events per source_ip.
+
+    Return
+
+    pd.DataFrame
+        DataFrame with columns like: source_ip, portscan
+    """
+
     port_probe = df[df["event_type"] == "port_probe"]
     mask = (
         port_probe
@@ -35,6 +71,23 @@ def detect_offhours(
         night_start: int = 0,
         night_end: int = 5
     ):
+
+    """
+    Detect successful logins that occur during off-hours.
+
+    Parameters
+
+    night_start : int
+        Lower bound (inclusive both) of the suspicious hour range (0–23)
+    night_end : int
+        Upper bound (inclusive both) of the suspicious hour range (0–23)
+
+    Returns
+
+    pd.DataFrame
+        Subset of df with login_success events in the specified hour range
+    """
+
     df = df.copy()
 
     df["hour"] = df["timestamp"].dt.hour
@@ -51,6 +104,25 @@ def detect_password_spraying(
     max_failures_per_user: int = 3
     ):
 
+    """
+    Detect password spraying patterns from a single source IP.
+
+    A source_ip is considered suspicious if:
+    - It has at least `min_total_failures` failed logins in total.
+    - It has attacked at least `min_distinct_users` different usernames.
+    - It has no more than "max_failures_per_user" failures for any single username,
+      which differentiates spraying from classic brute force.
+
+    Returns
+
+    pd.DataFrame
+        DataFrame with columns:
+        - source_ip
+        - total_failures
+        - distinct_users
+        - max_failures_per_user
+    """
+    
     df = df.copy()
     
     failed = df[df["event_type"] == "login_failed"]
@@ -85,5 +157,4 @@ def detect_password_spraying(
         (ip_stats["max_failures_per_user"] <= max_failures_per_user)
     ]
     
-
     return suspicious

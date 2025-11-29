@@ -1,11 +1,11 @@
 ==============================
 LOG ANALYSIS REPORT
 ==============================
-Generated at: 2025-11-29T18:13:04Z (UTC)
+Generated at: 2025-11-29T18:46:10Z (UTC)
 
 
 == Brute Force Attempts ==
-3 suspicious record(s) detected.
+3 suspicious detected.
 
 source_ip  failures
 10.0.0.10         5
@@ -13,13 +13,13 @@ source_ip  failures
  10.0.0.7         5
 
 == Port Scan Activity ==
-1 suspicious record(s) detected.
+1 suspicious detected.
 
  source_ip  portscan
 10.0.0.200        40
 
 == Off-hours Logins ==
-5 suspicious record(s) detected.
+5 suspicious detected.
 
                        timestamp    host source_ip username  dest_port    event_type  status  hour
 2025-11-20 01:12:45.042617+00:00 router1  10.0.0.5    user1      54321 login_success     200     1
@@ -29,10 +29,10 @@ source_ip  failures
 2025-11-20 02:41:12.042617+00:00 router1  10.0.0.9    user1      64075 login_success     200     2
 
 == Password Spraying ==
-No suspicious activity detected.
+No suspicious activity detected
 
 == Succesful Bruteforce ==
-2 suspicious record(s) detected.
+2 suspicious detected.
 
 source_ip  failures
 10.0.0.10         5
