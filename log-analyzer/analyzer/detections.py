@@ -30,7 +30,7 @@ def detect_portscan(df: pd.DataFrame, threshold: int = 5):
     suspicious = mask[mask["portscan"] >= threshold]
     return suspicious
 
-def detect_rarelogin(
+def detect_offhours(
         df: pd.DataFrame,
         night_start: int = 0,
         night_end: int = 5
