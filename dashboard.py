@@ -25,14 +25,21 @@ def render_sidebar():
         st.markdown("---")
         st.subheader("Parámetros de detección")
 
-        threshold = st.slider(
+        bruteforce_threshold = st.slider(
             "Intentos fallidos mínimos (brute_force)",
-            min_value = 3,
+            min_value = 2,
             max_value = 20,
             value = 5, 
         )
 
-    return uploaded_file, threshold
+        portscan_threshold = st.slider(
+            "Port probes mínimos (portscan)",
+            min_value= 2,
+            max_value=20,
+            value=5,
+        )
+
+    return uploaded_file, bruteforce_threshold, portscan_threshold
 
 
 def load_logs(uploaded_file):
@@ -70,30 +77,28 @@ def render_tabs(df_logs, results):
             st.dataframe(df_logs)
     with tab2:
         st.subheader("🔐 Brute Force")
-        if df_logs is None:
-            st.info("Carga un CSV para analizar intentos de fuerza bruta")
-        else:
-            brute_df = results.get("brute_force")
 
-            if brute_df is None or brute_df.empty:
-                st.success("No se detectaron ataques de fuerza bruta")
-            else:
-                st.write(f"IPs sospechosas detectadas: {brute_df.shape[0]}")
-                st.dataframe(brute_df)
-                st.markdown("IPs sospechosas por intentos fallidos")
-                brute_df_sorted = brute_df.sort_values(by="failures", ascending=False)
-                fig, ax = plt.subplots(figsize=(8, 4))
-                sns.barplot(
-                    data=brute_df_sorted,
-                    x="source_ip",
-                    y="failures",
-                    ax=ax
-                )
-                ax.set_label("IP origen")
-                ax.set_label("Intentos fallidos")
-                ax.set_label("IPs con más intentos fallidos")
-                plt.xticks(rotation=45, ha="right")
-                st.pyplot(fig)
+        brute_df = results.get("brute_force")
+
+        if brute_df.empty:
+            st.success("No se detectaron ataques de fuerza bruta")
+        else:
+            st.write(f"IPs sospechosas detectadas: {brute_df.shape[0]}")
+            st.dataframe(brute_df)
+            st.markdown("IPs sospechosas por intentos fallidos")
+            brute_df_sorted = brute_df.sort_values(by="failures", ascending=False)
+            fig, ax = plt.subplots(figsize=(8, 4))
+            sns.barplot(
+                data=brute_df_sorted,
+                x="source_ip",
+                y="failures",
+                ax=ax
+            )
+            ax.set_label("IP origen")
+            ax.set_label("Intentos fallidos")
+            ax.set_label("IPs con más intentos fallidos")
+            plt.xticks(rotation=45, ha="right")
+            st.pyplot(fig)
 
     with tab3:
         st.subheader("🟢 Successful Brute Force")
@@ -101,7 +106,27 @@ def render_tabs(df_logs, results):
 
     with tab4:
         st.subheader("📊 Portscan")
-        st.write("Aquí estará la detección de Portscan.")
+        portscan_df = results.get("port_scan")
+        if portscan_df.empty:
+            st.success("No se detectaron portscan")
+        else:
+            st.write(f"IPs sospechosas: {portscan_df.shape[0]}")
+            st.dataframe(portscan_df)
+            st.markdown("IPs sospechosas por escaneo de puertos")
+
+            portscan_df_sorted = portscan_df.sort_values(by="portscan", ascending=False)
+            fig, ax = plt.subplots(figsize=(8, 4))
+            sns.barplot(
+                data = portscan_df_sorted,
+                x="source_ip",
+                y="portscan",
+                ax=ax,
+            )
+            ax.set_label("IP origen")
+            ax.set_label("Escaneos")
+            ax.set_label("IPs con mas puertos escaneados")
+            plt.xticks(rotation=45, ha="right")
+            st.pyplot(fig)
 
     with tab5:
         st.subheader("⏰ Off-hours Logins")
@@ -115,20 +140,28 @@ def render_tabs(df_logs, results):
         st.subheader("🤖 SOC Copilot IA")
         st.write("Aquí más adelante enviaremos hallazgos a una IA.")
 
-def run_detections(df_logs, threshold):
+def run_detections(
+        df_logs, 
+        bruteforce_threshold,
+        portscan_threshold,
+):
     if df_logs is None:
         return {}
     
     results = {}
-    brute_force_df = detections.detect_bruteforce(df_logs, threshold=threshold)
+    brute_force_df = detections.detect_bruteforce(df_logs, threshold=bruteforce_threshold)
+    port_scan_df = detections.detect_portscan(df_logs, threshold=portscan_threshold)
     results["brute_force"] = brute_force_df
+    results["port_scan"] = port_scan_df
 
     return results
 
-uploaded_file, threshold = render_sidebar()
+uploaded_file, bruteforce_threshold, portscan_threshold= render_sidebar()
 df_logs = load_logs(uploaded_file)
 render_header()
+if df_logs is None:
+    st.info("No hay archivos, carga uno")
+else:
+    results = run_detections(df_logs, bruteforce_threshold, portscan_threshold)
 
-results = run_detections(df_logs, threshold)
-
-render_tabs(df_logs, results)
+    render_tabs(df_logs, results)
