@@ -43,7 +43,6 @@ class LogAnalyzer:
             min_distinct_user: int = 5,
             max_failures_per_user: int = 3,
     ):
-    
         return detect_password_spraying(
             self.df,
             min_total_failures=min_total_failures,
