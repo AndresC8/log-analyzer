@@ -3,6 +3,7 @@ import pandas as pd
 from analyzer import detections
 import matplotlib.pyplot as plt
 import seaborn as sns
+import altair as alt
 
 st.set_page_config(
     page_title="SOC Analyzer Dashboard",
@@ -39,8 +40,14 @@ def render_sidebar():
             value=5,
         )
 
-    return uploaded_file, bruteforce_threshold, portscan_threshold
+        succes_bruteforce_threshold = st.slider(
+            "Succes bruteforce",
+            min_value=2,
+            max_value=20,
+            value=5,
+        )
 
+    return uploaded_file, bruteforce_threshold, portscan_threshold, succes_bruteforce_threshold
 
 def load_logs(uploaded_file):
     df_logs = None
@@ -102,13 +109,66 @@ def render_tabs(df_logs, results):
 
     with tab3:
         st.subheader("🟢 Successful Brute Force")
-        st.write("Aquí irá esta detección.")
+        st.caption(
+            "Detecta inicios de sesión exitosos que estuvieron precedidos por múltiples "
+            "intentos fallidos desde la misma IP o contra la misma cuenta."
+        )
+        st.divider()
+
+        df_sbf = results.get("successful_bruteforce") 
+        if df_sbf is None or df_sbf.empty:
+            st.success("No se detectaron logins sospechosos en el umbral actual")
+        else:
+            st.subheader("📋 Hallazgos")
+            st.write(f"Total de cuentas comprometidas: {df_sbf.shape[0]}")
+            st.dataframe(df_sbf)
+
+            suspicious_ips = df_sbf["source_ip"].unique()
+
+            df_graph = df_logs[df_logs["source_ip"].isin(suspicious_ips)]
+
+            time_col = "timestamp"
+            user_col = "username"
+
+            if time_col in df_graph.columns and user_col in df_graph.columns:
+                st.subheader("📊 Línea temporal de logins sospechosos")
+
+                df_plot = df_graph.dropna(subset=[time_col]).copy()
+
+                if not df_plot.empty:
+
+                    df_plot = df_plot.sort_values(time_col)
+                    chart = (
+                        alt.Chart(df_plot)
+                        .mark_circle(size=60, opacity=0.7)
+                        .encode(
+                            x = alt.X(time_col + ":T", title="Fecha y hora"),
+                            y = alt.Y(user_col + ":N", title="Usuario"),
+                            color=alt.Color("source_ip:N", title="IP origen"),
+                            tooltip=[
+                                time_col,
+                                user_col,
+                                "source_ip",
+                                "event_type"
+                            ],
+                        )
+                        .interactive()
+                    )
+                    st.altair_chart(chart, use_container_width=True)
+                else:
+                    st.info("No hay eventos validos para graficar")
+            else:
+                st.info(
+                    f"No se encontraron las columnas necesarias: {time_col}, {user_col}"
+                )
+                
 
     with tab4:
         st.subheader("📊 Portscan")
         portscan_df = results.get("port_scan")
-        if portscan_df.empty:
+        if portscan_df is not None and portscan_df.empty:
             st.success("No se detectaron portscan")
+        
         else:
             st.write(f"IPs sospechosas: {portscan_df.shape[0]}")
             st.dataframe(portscan_df)
@@ -144,6 +204,7 @@ def run_detections(
         df_logs, 
         bruteforce_threshold,
         portscan_threshold,
+        successbruteforce_threshold
 ):
     if df_logs is None:
         return {}
@@ -151,17 +212,28 @@ def run_detections(
     results = {}
     brute_force_df = detections.detect_bruteforce(df_logs, threshold=bruteforce_threshold)
     port_scan_df = detections.detect_portscan(df_logs, threshold=portscan_threshold)
+    success_brute_force_df = detections.detect_succesful_bruteforce(df_logs, threshold=successbruteforce_threshold)
     results["brute_force"] = brute_force_df
     results["port_scan"] = port_scan_df
+    results["successful_bruteforce"] = success_brute_force_df
 
     return results
 
-uploaded_file, bruteforce_threshold, portscan_threshold= render_sidebar()
+(uploaded_file, 
+ bruteforce_threshold, 
+ portscan_threshold, 
+ successbruteforce_threshold) = render_sidebar()
+
 df_logs = load_logs(uploaded_file)
 render_header()
 if df_logs is None:
     st.info("No hay archivos, carga uno")
 else:
-    results = run_detections(df_logs, bruteforce_threshold, portscan_threshold)
+    results = run_detections(
+        df_logs, 
+        bruteforce_threshold, 
+        portscan_threshold, 
+        successbruteforce_threshold,
+    )
 
     render_tabs(df_logs, results)

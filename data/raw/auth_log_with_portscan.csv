@@ -194,3 +194,16 @@ timestamp,host,source_ip,username,dest_port,event_type,status
 2025-11-20T14:50:10.042617Z,fw1,10.0.0.200,unknown,4198,port_probe,900
 2025-11-20T14:53:55.042617Z,fw1,10.0.0.200,unknown,1427,port_probe,900
 2025-11-20T14:53:23.042617Z,fw1,10.0.0.200,unknown,1849,port_probe,900
+2025-11-20T14:10:01.042617Z,server1,10.0.0.50,admin,22,login_failed,401
+2025-11-20T14:10:12.042617Z,server1,10.0.0.50,admin,22,login_failed,401
+2025-11-20T14:10:25.042617Z,server1,10.0.0.50,admin,22,login_failed,401
+2025-11-20T14:10:39.042617Z,server1,10.0.0.50,admin,22,login_failed,401
+2025-11-20T14:10:55.042617Z,server1,10.0.0.50,admin,22,login_failed,401
+2025-11-20T14:11:10.042617Z,server1,10.0.0.50,admin,22,login_success,200
+2025-11-20T14:14:55.042617Z,server1,10.0.0.16,guest,28765,login_failed,401
+2025-11-20T14:02:39.042617Z,server1,10.0.0.23,root,46185,login_failed,401
+2025-11-20T14:21:26.042617Z,fw1,10.0.0.24,guest,8900,login_failed,401
+2025-11-20T14:21:17.042617Z,fw1,10.0.0.17,guest,58206,config_change,204
+2025-11-20T14:54:38.042617Z,fw1,10.0.0.200,unknown,4538,port_probe,900
+2025-11-20T14:54:08.042617Z,fw1,10.0.0.200,unknown,1894,port_probe,900
+
