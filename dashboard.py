@@ -254,15 +254,15 @@ def render_tabs(df_logs, results):
                 
     with tab5:
         st.subheader("⏰ Off-hours Logins")
-        st.write("Aquí se visualizarán los inicios de sesión fuera de horario.")
+        st.write("Aquí se visualizarán los inicios de sesión fuera de horario")
 
     with tab6:
         st.subheader("🔁 Password Spraying")
-        st.write("Aquí estará la detección Password Spraying.")
+        st.write("Aquí estará la detección Password Spraying")
 
     with tab7:
         st.subheader("🤖 SOC Copilot IA")
-        st.write("Aquí más adelante enviaremos hallazgos a una IA.")
+        st.write("Aquí estara hallazgos de iA")
 
 def run_detections(
         df_logs, 
