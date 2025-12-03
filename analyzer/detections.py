@@ -33,17 +33,39 @@ def detect_succesful_bruteforce(df: pd.DataFrame, threshold: int =5):
         DataFrame with columns like: source_ip, failures etc
     """
 
+    #Failed logins
+
     failed = df[df["event_type"] == "login_failed"]
-    failed_ips = failed.groupby("source_ip").size().reset_index(name="failures")
-    
-    success = df[df["event_type"] == "login_success"]
-    success_ips = set(success["source_ip"])
-
-    suspicious = (
-        failed_ips[(failed_ips["failures"] >= threshold ) & (failed_ips["source_ip"].isin(success_ips))]
+    failed_ips = (
+        failed.groupby("source_ip")
+        .size()
+        .reset_index(name="failures")
     )
+    
+    #Count failes per IP
 
-    return suspicious
+    success = df[df["event_type"] == "login_success"]
+    
+    suspicious_rows = []
+
+    for ip in failed_ips["source_ip"].unique():
+        fails_ip = failed[failed["source_ip"] == ip]
+        succ_ip = success[success["source_ip"]== ip]
+
+        if fails_ip.empty or succ_ip.empty:
+            continue
+
+        last_fail = fails_ip["timestamp"].max()
+        first_success = succ_ip["timestamp"].min()
+
+        #Succes must come after fails
+
+        if first_success > last_fail:
+            failures_count = fails_ip.shape[0]
+            if failures_count >= threshold:
+                suspicious_rows.append({"source_ip": ip, "failures": failures_count})
+
+    return pd.DataFrame(suspicious_rows)
 
 def detect_portscan(df: pd.DataFrame, threshold: int = 5):
 

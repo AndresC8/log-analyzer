@@ -5,6 +5,18 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import altair as alt
 
+st.markdown("""
+<style>
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
 st.set_page_config(
     page_title="SOC Analyzer Dashboard",
     page_icon="🛡️",
@@ -14,9 +26,9 @@ st.set_page_config(
 
 def render_sidebar():
     with st.sidebar:
-        st.header("⚙️ Configuración")
-        st.markdown("Sube un csv: ")
-
+        st.markdown("⚙️ Configuración")
+        st.write("Sube un csv: ")
+        
         uploaded_file = st.file_uploader(
             "SELECCIONAR ARCHIVO",
             type=["csv"],
@@ -24,7 +36,7 @@ def render_sidebar():
         )
 
         st.markdown("---")
-        st.subheader("Parámetros de detección")
+        st.subheader("📊 Parámetros de detección")
 
         bruteforce_threshold = st.slider(
             "Intentos fallidos mínimos (brute_force)",
@@ -47,6 +59,9 @@ def render_sidebar():
             value=5,
         )
 
+        st.markdown("---")
+        st.caption("SOC Analyzer V2")
+
     return uploaded_file, bruteforce_threshold, portscan_threshold, succes_bruteforce_threshold
 
 def load_logs(uploaded_file):
@@ -58,8 +73,14 @@ def load_logs(uploaded_file):
     return df
 
 def render_header():
-    st.title("🛡️ SOC Analyzer Dashboard")
-    st.markdown("### Visualización interactiva de logs y detecciones SOC")
+    st.markdown("""
+        <h1 style='color:#0EA5E9; margin-bottom:0;'>
+            🛡️ SOC Analyzer Dashboard
+        </h1>
+        <p style='color:#9BA8B4; font-size:18px; margin-top:4px;'>
+            Motor de detección, análisis de logs y visualización de anomalías.
+        </p>
+    """, unsafe_allow_html=True)
     st.divider()
 
 def render_tabs(df_logs, results):
@@ -85,27 +106,37 @@ def render_tabs(df_logs, results):
     with tab2:
         st.subheader("🔐 Brute Force")
 
-        brute_df = results.get("brute_force")
+        df_bf = results.get("brute_force")
 
-        if brute_df.empty:
+        if df_bf is None or df_bf.empty:
             st.success("No se detectaron ataques de fuerza bruta")
-        else:
-            st.write(f"IPs sospechosas detectadas: {brute_df.shape[0]}")
-            st.dataframe(brute_df)
-            st.markdown("IPs sospechosas por intentos fallidos")
-            brute_df_sorted = brute_df.sort_values(by="failures", ascending=False)
-            fig, ax = plt.subplots(figsize=(8, 4))
-            sns.barplot(
-                data=brute_df_sorted,
-                x="source_ip",
-                y="failures",
-                ax=ax
+            return
+        
+        st.write("IPs con multiples intentos fallidos de autenticacion")
+        st.dataframe(df_bf)
+
+        ip_col = "source_ip"
+        fail_col = "failures"
+
+        if ip_col in df_bf.columns and fail_col in df_bf.columns:
+            st.subheader("Intentos fallidos por IP de origen")
+
+            chart = (
+                alt.Chart(df_bf)
+                .mark_bar()
+                .encode(
+                    x = alt.X(ip_col + ":N", title="IP origen", sort="-y"),
+                    y = alt.Y(fail_col + ":Q", title="Intentos fallidos"),
+                    tooltip=[ip_col, fail_col],
+                    color = alt.Color(fail_col + ":Q", title="Intentos fallidos"),
+                )
             )
-            ax.set_label("IP origen")
-            ax.set_label("Intentos fallidos")
-            ax.set_label("IPs con más intentos fallidos")
-            plt.xticks(rotation=45, ha="right")
-            st.pyplot(fig)
+
+            st.altair_chart(chart, use_container_width=True)
+        else:
+            st.warning(
+                f"No se encontraron las columnas: {ip_col}, {fail_col}"
+            )
 
     with tab3:
         st.subheader("🟢 Successful Brute Force")
@@ -138,13 +169,21 @@ def render_tabs(df_logs, results):
                 if not df_plot.empty:
 
                     df_plot = df_plot.sort_values(time_col)
+
                     chart = (
                         alt.Chart(df_plot)
                         .mark_circle(size=60, opacity=0.7)
                         .encode(
                             x = alt.X(time_col + ":T", title="Fecha y hora"),
                             y = alt.Y(user_col + ":N", title="Usuario"),
-                            color=alt.Color("source_ip:N", title="IP origen"),
+                            color=alt.Color(
+                                "event_type:N",
+                                title="Tipo de evento",
+                                scale=alt.Scale(
+                                    domain=["login_failed", "login_success"],
+                                    range = ["#EF4444", "#22C55E"]
+                                )
+                            ),
                             tooltip=[
                                 time_col,
                                 user_col,
@@ -161,33 +200,58 @@ def render_tabs(df_logs, results):
                 st.info(
                     f"No se encontraron las columnas necesarias: {time_col}, {user_col}"
                 )
-                
-
+            
     with tab4:
         st.subheader("📊 Portscan")
-        portscan_df = results.get("port_scan")
-        if portscan_df is not None and portscan_df.empty:
-            st.success("No se detectaron portscan")
-        
+        df_pscan = results.get("port_scan")
+        if df_pscan is None or df_pscan.empty:
+            st.success("No se detectaron portscan") 
         else:
-            st.write(f"IPs sospechosas: {portscan_df.shape[0]}")
-            st.dataframe(portscan_df)
+            st.write(f"IPs sospechosas: {df_pscan.shape[0]}")
+            st.dataframe(df_pscan)
             st.markdown("IPs sospechosas por escaneo de puertos")
 
-            portscan_df_sorted = portscan_df.sort_values(by="portscan", ascending=False)
-            fig, ax = plt.subplots(figsize=(8, 4))
-            sns.barplot(
-                data = portscan_df_sorted,
-                x="source_ip",
-                y="portscan",
-                ax=ax,
-            )
-            ax.set_label("IP origen")
-            ax.set_label("Escaneos")
-            ax.set_label("IPs con mas puertos escaneados")
-            plt.xticks(rotation=45, ha="right")
-            st.pyplot(fig)
+            col1, col2, col3 = st.columns(3)
+            col1.metric("IPs sospechosas", df_pscan.shape[0])
 
+            targets_col = "portscan"
+            ip_col = "source_ip"
+
+            if targets_col in df_pscan.columns:
+                col2.metric("Destinos unicos totales", int(df_pscan[targets_col].sum()))
+                col3.metric("Max. destinos por IP", int(df_pscan[targets_col].max()))
+                st.divider()
+
+            if ip_col in df_pscan.columns and targets_col in df_pscan.columns:
+                st.subheader("Destinos distintos por IP origen")
+
+                chart = (
+                    alt.Chart(df_pscan)
+                    .mark_bar()
+                    .encode(
+                        x = alt.X(
+                            ip_col + ":N",
+                            title = "IP origen",
+                            sort = "-y"
+                        ),
+                        y = alt.Y(
+                            targets_col + ":Q",
+                            title="Destinos distintos alcanzados"
+                        ),
+                        color=alt.Color(
+                            targets_col + ":Q",
+                            title = "Destinos distintos",
+                            scale=alt.Scale(scheme="teals")
+                        ),
+                        tooltip = [ip_col, targets_col],
+                    )
+                    
+                )
+
+                st.altair_chart(chart, use_container_width=True)
+            else:
+                st.info(f"No se encontraron las columnas necesarias: {ip_col}, {targets_col}")
+                
     with tab5:
         st.subheader("⏰ Off-hours Logins")
         st.write("Aquí se visualizarán los inicios de sesión fuera de horario.")
@@ -226,6 +290,7 @@ def run_detections(
 
 df_logs = load_logs(uploaded_file)
 render_header()
+
 if df_logs is None:
     st.info("No hay archivos, carga uno")
 else:
