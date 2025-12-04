@@ -1,4 +1,4 @@
-timestamp,host,source_ip,username,dest_port,event_type,status
+timestamp,host,souce_ip,username,dest_port,event_type,status
 2025-11-20T14:14:55.108026Z,router2,10.0.0.25,root,10064,login_failed,401
 2025-11-20T14:26:34.108026Z,server1,10.0.0.33,guest,2496,config_change,204
 2025-11-20T13:59:28.108026Z,fw1,10.0.0.23,user1,9366,port_probe,900

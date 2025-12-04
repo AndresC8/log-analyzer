@@ -3,6 +3,10 @@ import pandas as pd
 from analyzer import detections
 import altair as alt
 
+REQUIRED_AUTH_COLUMNS = {
+    "timestamp", "event_type", "source_ip", "username"
+}
+
 st.markdown("""
 <style>
     .block-container {
@@ -281,6 +285,10 @@ def run_detections(
 
     return results
 
+def validate_auth_schema(df: pd.DataFrame):
+    missing = [col for col in REQUIRED_AUTH_COLUMNS if col not in df.columns]
+    return missing
+
 (uploaded_file, 
  bruteforce_threshold, 
  portscan_threshold, 
@@ -289,14 +297,28 @@ def run_detections(
 df_logs = load_logs(uploaded_file)
 render_header()
 
-if df_logs is None:
-    st.info("No hay archivos, carga uno")
-else:
-    results = run_detections(
-        df_logs, 
-        bruteforce_threshold, 
-        portscan_threshold, 
-        successbruteforce_threshold,
-    )
+if df_logs is not None:
+    missing = validate_auth_schema(df_logs)
 
+    if missing:
+        st.error(
+            "❌ El archivo cargado no tiene el formato esperado para logs de autenticación.\n\n"
+            "Columnas requeridas:\n"
+            f"- {', '.join(sorted(REQUIRED_AUTH_COLUMNS))}\n\n"
+            "Columnas faltantes:\n"
+            f"- {', '.join(sorted(missing))}"
+        )
+        st.stop()
+
+results = run_detections(
+    df_logs, 
+    bruteforce_threshold, 
+    portscan_threshold, 
+    successbruteforce_threshold,
+)
+
+if df_logs is not None:
+    render_header()
     render_tabs(df_logs, results)
+st.info("Carga un log en la sidebar")
+
