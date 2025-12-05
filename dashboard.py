@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 from analyzer import detections
 import altair as alt
-from openai import OpenAI
-from analyzer.copilot import build_soc_summary, ask_soc_copilot
+# from openai import OpenAI
+# from analyzer.copilot import build_soc_summary, ask_soc_copilot
 
 REQUIRED_AUTH_COLUMNS = {
     "timestamp", "event_type", "source_ip", "username"
@@ -269,26 +269,26 @@ def render_tabs(df_logs, results):
         st.caption("Genera un alnalisis a partir de las detecciones actuales")
         st.divider()
 
-        if df_logs is None:
-            st.info("Sube primero un csv de logs en la barra lateral")
-        elif not results:
-            st.info("NO hayresultados de detecciones para analizar todavia")
-        else:
-            with st.expander(
-                "Ver resumen tecnico que se enviará a la IA",
-                expanded=False
-            ):
+        # if df_logs is None:
+        #     st.info("Sube primero un csv de logs en la barra lateral")
+        # elif not results:
+        #     st.info("NO hayresultados de detecciones para analizar todavia")
+        # else:
+        #     with st.expander(
+        #         "Ver resumen tecnico que se enviará a la IA",
+        #         expanded=False
+        #     ):
 
-                summary_preview = build_soc_summary(results)
-                st.text(summary_preview)
+        #         summary_preview = build_soc_summary(results)
+        #         st.text(summary_preview)
 
-                if st.button("Generar analisis con IA"):
-                    with st.spinner("Analizando detecciones con SOC copilot..."):
-                        summary_text = build_soc_summary(results)
-                        ia_response = ask_soc_copilot(summary_text)
+        #         if st.button("Generar analisis con IA"):
+        #             with st.spinner("Analizando detecciones con SOC copilot..."):
+        #                 summary_text = build_soc_summary(results)
+        #                 ia_response = ask_soc_copilot(summary_text)
 
-                        st.markdown("Informe generado por SOC copilot")
-                        st.markdown(ia_response)
+        #                 st.markdown("Informe generado por SOC copilot")
+        #                 st.markdown(ia_response)
 
 def run_detections(
         df_logs, 
@@ -342,7 +342,6 @@ results = run_detections(
 )
 
 if df_logs is not None:
-    render_header()
     render_tabs(df_logs, results)
 
 

@@ -1,6 +1,10 @@
 import pandas as pd
+from datetime import timedelta
 
-def detect_bruteforce(df: pd.DataFrame, threshold=5):
+def detect_bruteforce(
+        df: pd.DataFrame, 
+        threshold: int =5,
+        window_minute: int = 5):
 
     """
     Detect IPs with repeated failed login attempts.
@@ -13,11 +17,49 @@ def detect_bruteforce(df: pd.DataFrame, threshold=5):
     pd.DataFrame
         DataFrame with columns like: source_ip, failures.
     """
+    #1
+    df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+    df = df.sort_values(by="timestamp", ascending=False)
+    
+    failed = df[df["event_type"] == "login_failed"].copy()
+    failed = failed.dropna(subset=["timestamp"])
+    failed = failed.sort_values("timestamp")
 
-    failed = df[df["event_type"] == "login_failed"]
-    failed_ips = failed.groupby("source_ip").size().reset_index(name="failures")
-    suspicious = failed_ips[failed_ips["failures"] >= threshold]
-    return suspicious
+    suspicious_windows = []
+
+    window_delta = timedelta(minutes=window_minute)
+
+    for ip, group in failed.groupby("source_ip"):
+        times = group["timestamp"].tolist()
+
+        left = 0
+        for right in range(len(times)):
+            while times[right] - times[left] > window_delta:
+                left += 1
+            
+            window_size = right - left + 1
+
+            if window_size >= threshold:
+
+                window_start = times[left]
+                window_end = times[right]
+
+                suspicious_windows.append(
+                    {
+                        "source_ip": ip,
+                        "failures": window_size,
+                        "window_start": window_start,
+                        "window_end": window_end,
+                    }
+                )
+    
+    if not suspicious_windows:
+        return pd.DataFrame()
+    return pd.DataFrame(suspicious_windows)
+
+
+    
+    return 
 
 def detect_succesful_bruteforce(df: pd.DataFrame, threshold: int =5):
 
