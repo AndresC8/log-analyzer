@@ -266,8 +266,50 @@ def render_tabs(df_logs, results):
                 
     with tab5:
         st.subheader("⏰ Off-hours Logins")
+        df_offhours = results.get("off_hours")
         
+        if df_offhours is None or df_offhours.empty:
+            st.success("No se detecrtó actividad")
+            
+        else:
+            st.write("📋 Hallazgos")
+            st.dataframe(df_offhours)
 
+            time_col = "timestamp"
+            user_col = "username"
+
+            if time_col in df_offhours and user_col in df_offhours:
+                st.subheader("📊 Línea temporal de logins off-hours")
+
+                df_plot = df_offhours.dropna(subset=[time_col]).copy()
+
+                if not df_plot.empty:
+                    df_plot = df_plot.sort_values(time_col)
+
+                    chart = (
+                        alt.Chart(df_plot)
+                        .mark_circle(size = 50, opacity = 0.7)
+                        .encode(
+                            x = alt.X(time_col + ":T", title="Fecha y hora"),
+                            y = alt.Y(user_col + ":N", title="Username"),
+                            color = alt.Color(
+                                "event_type:N",
+                                title = "Login success",
+                                scale = alt.Scale(
+                                    domain = ["login_success"],
+                                    range = ["#22C55E"]
+                                )
+                            ),
+                            tooltip=[
+                                time_col,
+                                user_col,
+                                "source_ip",
+                                "event_type"
+                            ],
+                        )
+                        .interactive()
+                    )
+                    st.altair_chart(chart, use_container_width=True)
 
     with tab6:
         st.subheader("🔁 Password Spraying")
@@ -353,7 +395,7 @@ results = run_detections(
     bruteforce_threshold, 
     portscan_threshold, 
     successbruteforce_threshold,
-    window_minutes
+    window_minutes,
 )
 
 if df_logs is not None:
