@@ -130,10 +130,13 @@ def render_tabs(df_logs, results):
         ip_col = "source_ip"
         fail_col = "failures"
 
+        time_col = "timestamp"
+        user_col = "username"
+
         if ip_col in df_bf.columns and fail_col in df_bf.columns:
             st.subheader("Intentos fallidos por IP de origen")
 
-            chart = (
+            chart1 = (
                 alt.Chart(df_bf)
                 .mark_bar()
                 .encode(
@@ -144,7 +147,43 @@ def render_tabs(df_logs, results):
                 )
             )
 
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart1, use_container_width=True)
+
+            st.divider()
+
+            st.subheader("📊 Línea temporal de logins fallidos")
+
+            suspicious_bf = df_bf[ip_col].unique()
+            df_graph = df_logs[df_logs[ip_col].isin(suspicious_bf)].copy()
+
+            df_graph[time_col] = pd.to_datetime(df_graph[time_col], errors="coerce")
+            df_plot = df_graph.dropna(subset = [time_col])
+
+            chart2 = (
+                alt.Chart(df_plot)
+                .mark_circle(size = 60, opacity = 0.7)
+                .encode(
+                   x = alt.X(time_col + ":T", title="Fecha y hora"),
+                   y = alt.Y(user_col + ":N", title="Usuario"),
+                   color = alt.Color(
+                       "event_type:N",
+                       title = "Tipo evento",
+                       scale = alt.Scale(
+                           domain = ["login_failed"],
+                           range = ["#EF4444"],
+                       )
+                   ),
+                   tooltip=[
+                                time_col,
+                                user_col,
+                                "source_ip",
+                                "event_type",
+                    ],
+                )
+                .interactive()
+            )
+            st.altair_chart(chart2, use_container_width=True)
+
         else:
             st.warning(
                 f"No se encontraron las columnas: {ip_col}, {fail_col}"
@@ -281,7 +320,12 @@ def render_tabs(df_logs, results):
             if time_col in df_offhours and user_col in df_offhours:
                 st.subheader("📊 Línea temporal de logins off-hours")
 
-                df_plot = df_offhours.dropna(subset=[time_col]).copy()
+                df_offhours = df_offhours.copy()
+                
+                if pd.api.types.is_datetime64_any_dtype(df_offhours[time_col]):
+                    df_offhours[time_col] = df_offhours[time_col].dt.tz_localize(None)
+
+                df_plot = df_offhours.dropna(subset = [time_col]).copy()
 
                 if not df_plot.empty:
                     df_plot = df_plot.sort_values(time_col)
@@ -400,5 +444,4 @@ results = run_detections(
 
 if df_logs is not None:
     render_tabs(df_logs, results)
-
 
