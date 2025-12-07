@@ -63,10 +63,18 @@ def render_sidebar():
             value=5,
         )
 
+        window_minutes = st.number_input(
+            "Tamañ de ventana",
+            min_value = 1,
+            max_value = 50,
+            value = 5,
+            step = 1 
+        )
+
         st.markdown("---")
         st.caption("SOC Analyzer V2")
 
-    return uploaded_file, bruteforce_threshold, portscan_threshold, succes_bruteforce_threshold
+    return uploaded_file, bruteforce_threshold, portscan_threshold, succes_bruteforce_threshold, window_minutes
 
 def load_logs(uploaded_file):
     df_logs = None
@@ -258,7 +266,8 @@ def render_tabs(df_logs, results):
                 
     with tab5:
         st.subheader("⏰ Off-hours Logins")
-        st.write("Aquí se visualizarán los inicios de sesión fuera de horario")
+        
+
 
     with tab6:
         st.subheader("🔁 Password Spraying")
@@ -294,18 +303,22 @@ def run_detections(
         df_logs, 
         bruteforce_threshold,
         portscan_threshold,
-        successbruteforce_threshold
+        successbruteforce_threshold,
+        window_minutes
+
 ):
     if df_logs is None:
         return {}
     
     results = {}
-    brute_force_df = detections.detect_bruteforce(df_logs, threshold=bruteforce_threshold)
+    brute_force_df = detections.detect_bruteforce(df_logs, threshold=bruteforce_threshold, window_minutes=window_minutes)
     port_scan_df = detections.detect_portscan(df_logs, threshold=portscan_threshold)
     success_brute_force_df = detections.detect_succesful_bruteforce(df_logs, threshold=successbruteforce_threshold)
+    off_hours_df = detections.detect_offhours(df_logs, night_start=0, night_end=5)
     results["brute_force"] = brute_force_df
     results["port_scan"] = port_scan_df
     results["successful_bruteforce"] = success_brute_force_df
+    results["off_hours"] = off_hours_df
 
     return results
 
@@ -316,7 +329,8 @@ def validate_auth_schema(df: pd.DataFrame):
 (uploaded_file, 
  bruteforce_threshold, 
  portscan_threshold, 
- successbruteforce_threshold) = render_sidebar()
+ successbruteforce_threshold,
+ window_minutes) = render_sidebar()
 
 df_logs = load_logs(uploaded_file)
 render_header()
@@ -339,6 +353,7 @@ results = run_detections(
     bruteforce_threshold, 
     portscan_threshold, 
     successbruteforce_threshold,
+    window_minutes
 )
 
 if df_logs is not None:

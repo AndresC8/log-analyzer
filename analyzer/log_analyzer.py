@@ -25,8 +25,8 @@ class LogAnalyzer:
         df = clean_logs(df)
         return cls(df)
     
-    def run_bruteforce_detection(self, threshold: int = 5):
-        return detect_bruteforce(self.df,threshold=threshold)
+    def run_bruteforce_detection(self, threshold: int = 5, window_minutes: int = 5):
+        return detect_bruteforce(self.df,threshold=threshold, window_minutes=window_minutes)
     
     def run_offhours_detection(self, night_start: int = 0, night_end: int = 5):
         return detect_offhours(self.df, night_start=night_start, night_end=night_end)

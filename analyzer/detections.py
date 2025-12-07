@@ -4,7 +4,7 @@ from datetime import timedelta
 def detect_bruteforce(
         df: pd.DataFrame, 
         threshold: int =5,
-        window_minute: int = 5):
+        window_minutes: int = 5):
 
     """
     Detect IPs with repeated failed login attempts.
@@ -24,7 +24,7 @@ def detect_bruteforce(
     failed = failed.dropna(subset=["timestamp"])
     failed = failed.sort_values("timestamp")
 
-    failed["time_bucket"] = failed["timestamp"].dt.floor(f"{window_minute}min")
+    failed["time_bucket"] = failed["timestamp"].dt.floor(f"{window_minutes}min")
     if failed.empty:
         return pd.DataFrame()
 
@@ -36,8 +36,6 @@ def detect_bruteforce(
 
     suspicious = grouped[grouped["failures"] >= threshold]
     return suspicious
-
-    
 
 def detect_succesful_bruteforce(df: pd.DataFrame, threshold: int =5):
 
@@ -131,13 +129,15 @@ def detect_offhours(
     """
     df = df.copy()
 
-
     df["hour"] = df["timestamp"].dt.hour
+
+    off_hours = df[
+        (df["event_type"] == "login_success")
+        &
+        (df["hour"].between(night_start, night_end))
+    ]
     
-    success = df[df["event_type"] == "login_success"]
-    suspicious = success[(success["hour"] >= night_start) & (success["hour"] <= night_end) ]
-    
-    return suspicious
+    return off_hours
 
 def detect_password_spraying(
     df: pd.DataFrame,
