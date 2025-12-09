@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from analyzer import detections
+from analyzer.metrics import basic_metrics
 import altair as alt
 # from openai import OpenAI
 # from analyzer.copilot import build_soc_summary, ask_soc_copilot
@@ -84,7 +85,7 @@ def load_logs(uploaded_file):
     df = pd.read_csv(uploaded_file)
     return df
 
-def render_header():
+def render_header(metrics: dict):
     st.markdown("""
         <h1 style='color:#0EA5E9; margin-bottom:0;'>
             🛡️ SOC Analyzer Dashboard
@@ -93,6 +94,13 @@ def render_header():
             Motor de detección, análisis de logs y visualización de anomalías.
         </p>
     """, unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns(3, border=True)
+
+    col1.metric("Eventos analizados", metrics["total_events"])
+    col2.metric("Logins fallidos", metrics["failed_logins"])
+    col3.metric("Logins totales", metrics["succesful_logins"])
+
     st.divider()
 
 def render_tabs(df_logs, results):
@@ -418,8 +426,12 @@ def validate_auth_schema(df: pd.DataFrame):
  successbruteforce_threshold,
  window_minutes) = render_sidebar()
 
+
 df_logs = load_logs(uploaded_file)
-render_header()
+
+metrics = basic_metrics(df_logs)
+
+render_header(metrics)
 
 if df_logs is not None:
     missing = validate_auth_schema(df_logs)
@@ -432,16 +444,19 @@ if df_logs is not None:
             "Columnas faltantes:\n"
             f"- {', '.join(sorted(missing))}"
         )
-        st.stop()
+        st.stop()   
 
-results = run_detections(
+    results = run_detections(
     df_logs, 
     bruteforce_threshold, 
     portscan_threshold, 
     successbruteforce_threshold,
     window_minutes,
-)
-
-if df_logs is not None:
+    )
+    
     render_tabs(df_logs, results)
+
+
+
+
 
