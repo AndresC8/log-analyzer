@@ -26,11 +26,21 @@ st.set_page_config(
     page_title="SOC Analyzer Dashboard",
     page_icon="🛡️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
 def render_sidebar():
     with st.sidebar:
+        st.markdown("Idioma / language ")
+        lang_label = st.selectbox(
+            "Seleccionar idioma / select languaje",
+            ["ES", "EN"]
+        )
+
+        st.session_state["lang"] = "es" if lang_label == "ES" else "EN"
+
+        st.markdown("---")
+
         st.markdown("⚙️ Configuración")
         st.write("Sube un csv: ")
         
@@ -41,7 +51,7 @@ def render_sidebar():
         )
 
         st.markdown("---")
-        st.subheader("📊 Parámetros de detección")
+        st.subheader("Parámetros de detección")
 
         bruteforce_threshold = st.slider(
             "Intentos fallidos mínimos (brute_force)",
@@ -64,18 +74,10 @@ def render_sidebar():
             value=5,
         )
 
-        window_minutes = st.number_input(
-            "Tamañ de ventana",
-            min_value = 1,
-            max_value = 50,
-            value = 5,
-            step = 1 
-        )
-
         st.markdown("---")
         st.caption("SOC Analyzer V2")
 
-    return uploaded_file, bruteforce_threshold, portscan_threshold, succes_bruteforce_threshold, window_minutes
+    return uploaded_file, bruteforce_threshold, portscan_threshold, succes_bruteforce_threshold
 
 def load_logs(uploaded_file):
     df_logs = None
@@ -85,7 +87,7 @@ def load_logs(uploaded_file):
     df = pd.read_csv(uploaded_file)
     return df
 
-def render_header(metrics: dict):
+def render_header():
     st.markdown("""
         <h1 style='color:#0EA5E9; margin-bottom:0;'>
             🛡️ SOC Analyzer Dashboard
@@ -95,13 +97,16 @@ def render_header(metrics: dict):
         </p>
     """, unsafe_allow_html=True)
 
+    st.divider()
+
+def render_metrics(metrics: dict):
     col1, col2, col3 = st.columns(3, border=True)
 
     col1.metric("Eventos analizados", metrics["total_events"])
     col2.metric("Logins fallidos", metrics["failed_logins"])
     col3.metric("Logins totales", metrics["succesful_logins"])
 
-    st.divider()
+
 
 def render_tabs(df_logs, results):
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
@@ -398,14 +403,13 @@ def run_detections(
         bruteforce_threshold,
         portscan_threshold,
         successbruteforce_threshold,
-        window_minutes
 
 ):
     if df_logs is None:
         return {}
     
     results = {}
-    brute_force_df = detections.detect_bruteforce(df_logs, threshold=bruteforce_threshold, window_minutes=window_minutes)
+    brute_force_df = detections.detect_bruteforce(df_logs, threshold=bruteforce_threshold)
     port_scan_df = detections.detect_portscan(df_logs, threshold=portscan_threshold)
     success_brute_force_df = detections.detect_succesful_bruteforce(df_logs, threshold=successbruteforce_threshold)
     off_hours_df = detections.detect_offhours(df_logs, night_start=0, night_end=5)
@@ -424,18 +428,20 @@ def validate_auth_schema(df: pd.DataFrame):
  bruteforce_threshold, 
  portscan_threshold, 
  successbruteforce_threshold,
- window_minutes) = render_sidebar()
+ ) = render_sidebar()
 
 
 df_logs = load_logs(uploaded_file)
 
-metrics = basic_metrics(df_logs)
 
-render_header(metrics)
 
-if df_logs is not None:
+render_header()
+
+if df_logs is None:
+    st.info("Sube un archivo")
+else:
     missing = validate_auth_schema(df_logs)
-
+    
     if missing:
         st.error(
             "❌ El archivo cargado no tiene el formato esperado para logs de autenticación\n\n"
@@ -446,15 +452,18 @@ if df_logs is not None:
         )
         st.stop()   
 
+    metrics = basic_metrics(df_logs)
+    render_metrics(metrics)
+
     results = run_detections(
     df_logs, 
     bruteforce_threshold, 
     portscan_threshold, 
     successbruteforce_threshold,
-    window_minutes,
     )
     
     render_tabs(df_logs, results)
+
 
 
 
