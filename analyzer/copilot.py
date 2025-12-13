@@ -6,7 +6,7 @@ try:
 except Exception:
     st = None
 
-def get_openai_client():
+def get_openai_client() -> Optional["OpenAI"]:
     api_key = None
     if st is not None:
         api_key = st.secrets.get("OPENAI_API_KEY", None)
