@@ -6,7 +6,6 @@ from analyzer.copilot import get_openai_client
 import altair as alt
 from openai import OpenAI
 from analyzer.copilot import build_soc_summary, ask_soc_copilot
-import os
 
 REQUIRED_AUTH_COLUMNS = {
     "timestamp", "event_type", "source_ip", "username"
@@ -34,33 +33,33 @@ st.set_page_config(
 def render_sidebar():
     with st.sidebar:
         st.markdown("⚙️ Configuración")
-        st.write("Sube un csv: ")
+        st.write("Sube un archivo CSV: ")
         
         uploaded_file = st.file_uploader(
             "SELECCIONAR ARCHIVO",
             type=["csv"],
-            help="Carga los logs"
+            help="Cargar logs"
         )
 
         st.markdown("---")
         st.subheader("Parámetros de detección")
 
         bruteforce_threshold = st.slider(
-            "Intentos fallidos mínimos (brute_force)",
+            "Intentos fallidos mínimos (BruteForce)",
             min_value = 2,
             max_value = 20,
             value = 5, 
         )
 
         portscan_threshold = st.slider(
-            "Port probes mínimos (portscan)",
+            "Port probes mínimos (Portscan)",
             min_value= 2,
             max_value=20,
             value=5,
         )
 
         succes_bruteforce_threshold = st.slider(
-            "Succes bruteforce",
+            "Succes bruteforce (Success BF)",
             min_value=2,
             max_value=20,
             value=5,
@@ -96,9 +95,7 @@ def render_metrics(metrics: dict):
 
     col1.metric("Eventos analizados", metrics["total_events"])
     col2.metric("Logins fallidos", metrics["failed_logins"])
-    col3.metric("Logins totales", metrics["succesful_logins"])
-
-
+    col3.metric("Logins exitosos", metrics["succesful_logins"])
 
 def render_tabs(df_logs, results):
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
@@ -261,7 +258,7 @@ def render_tabs(df_logs, results):
         st.subheader("📊 Portscan")
         df_pscan = results.get("port_scan")
         if df_pscan is None or df_pscan.empty:
-            st.success("No se detectaron portscan") 
+            st.success("No se detectao portscan") 
         else:
             st.write(f"IPs sospechosas: {df_pscan.shape[0]}")
             st.dataframe(df_pscan)
@@ -313,7 +310,7 @@ def render_tabs(df_logs, results):
         df_offhours = results.get("off_hours")
         
         if df_offhours is None or df_offhours.empty:
-            st.success("No se detecrtó actividad")
+            st.success("No se detectó actividad")
             
         else:
             st.write("📋 Hallazgos")
@@ -362,7 +359,7 @@ def render_tabs(df_logs, results):
 
     with tab6:
         st.subheader("🔁 Password Spraying")
-        st.write("Aquí estar la detección Password Spraying")
+        st.write("...")
 
     with tab7:
         st.subheader("🤖 SOC Copilot IA")

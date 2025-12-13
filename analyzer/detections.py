@@ -7,7 +7,7 @@ def detect_bruteforce(
         window_minutes: int = 5):
 
     """
-    Detect IPs with repeated failed login attempts.
+    Detect IPs with repeated failed login attempts
 
     An IP is considered suspicious if it has at least `threshold`
     events with event_type == "login_failed".
