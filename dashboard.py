@@ -372,7 +372,7 @@ def render_tabs(df_logs, results):
         client = get_openai_client()
 
         if client is None:
-            st.info("SOC Copilot está deshabilitado, falta la API Key")
+            st.info("SOC Copilot está deshabilitado, falta la API Key. Está pensado para uso local o controlado")
 
         if df_logs is None:
             st.info("Sube primero un csv de logs en la barra lateral")
