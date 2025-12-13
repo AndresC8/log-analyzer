@@ -113,22 +113,6 @@ Data visualization for security use cases
 
 It is not meant to replace a SIEM, but to understand how one works under the hood.
 
-🧱 Project Architecture (Simplified)
-soc-analyzer/
-├── analyzer/
-│   ├── detections/
-│   │   ├── auth.py
-│   │   └── network.py
-│   ├── metrics.py
-│   └── copilot.py
-├── dashboard.py
-├── data/
-│   └── sample_logs.csv
-├── .streamlit/
-│   └── secrets.toml
-├── requirements.txt
-└── README.md
-
 ▶️ How to Run Locally
 1️⃣ Clone the repository
 git clone https://github.com/yourusername/soc-analyzer.git
