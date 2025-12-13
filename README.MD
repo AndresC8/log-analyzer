@@ -166,11 +166,6 @@ API-based ingestion
 
 Detection-as-code configuration
 
-⚠️ Disclaimer
-
-This project uses synthetic data only.
-It is intended for educational and portfolio purposes, not production use.
-
 🙌 Feedback
 
 Feedback and suggestions are welcome.
