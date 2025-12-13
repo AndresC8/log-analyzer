@@ -4,7 +4,7 @@ from analyzer import detections
 from analyzer.metrics import basic_metrics
 from analyzer.copilot import get_openai_client
 import altair as alt
-from openai import OpenAI
+
 from analyzer.copilot import build_soc_summary, ask_soc_copilot
 
 REQUIRED_AUTH_COLUMNS = {
