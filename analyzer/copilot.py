@@ -2,16 +2,29 @@ from typing import Optional, Dict, Any
 import os
 
 try:
+    import streamlit as st
+except Exception:
+    st = None
+
+try:
     from openai import OpenAI
 except Exception:
     OpenAI = None
-
 
 def get_openai_client():
     if OpenAI is None:
         return None
 
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = None
+
+    # 1) Streamlit Cloud secrets
+    if st is not None:
+        api_key = st.secrets.get("OPENAI_API_KEY", None)
+
+    # 2) Fallback: env var
+    if not api_key:
+        api_key = os.getenv("OPENAI_API_KEY")
+
     if not api_key:
         return None
 
