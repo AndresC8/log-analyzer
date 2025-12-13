@@ -41,6 +41,8 @@ def render_sidebar():
             help="Cargar logs"
         )
 
+        use_demo = st.sidebar.checkbox("Usar dataset de demostración", value=True)
+
         st.markdown("---")
         st.subheader("Parámetros de detección")
 
@@ -68,15 +70,16 @@ def render_sidebar():
         st.markdown("---")
         st.caption("SOC Analyzer V2")
 
-    return uploaded_file, bruteforce_threshold, portscan_threshold, succes_bruteforce_threshold
+    return uploaded_file, bruteforce_threshold, portscan_threshold, succes_bruteforce_threshold, use_demo
 
-def load_logs(uploaded_file):
-    df_logs = None
+def load_logs(uploaded_file, use_demo: bool):
+    if use_demo:
+        return pd.read_csv("data/raw/soc_logs_3000_mixed_v3.csv")
 
     if uploaded_file is None:
         return None
-    df = pd.read_csv(uploaded_file)
-    return df
+
+    return pd.read_csv(uploaded_file)
 
 def render_header():
     st.markdown("""
@@ -422,10 +425,11 @@ def validate_auth_schema(df: pd.DataFrame):
  bruteforce_threshold, 
  portscan_threshold, 
  successbruteforce_threshold,
+ use_demo
  ) = render_sidebar()
 
 
-df_logs = load_logs(uploaded_file)
+df_logs = load_logs(uploaded_file, use_demo)
 
 
 
