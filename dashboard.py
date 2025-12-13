@@ -2,9 +2,11 @@ import streamlit as st
 import pandas as pd
 from analyzer import detections
 from analyzer.metrics import basic_metrics
+from analyzer.copilot import get_openai_client
 import altair as alt
-# from openai import OpenAI
-# from analyzer.copilot import build_soc_summary, ask_soc_copilot
+from openai import OpenAI
+from analyzer.copilot import build_soc_summary, ask_soc_copilot
+import os
 
 REQUIRED_AUTH_COLUMNS = {
     "timestamp", "event_type", "source_ip", "username"
@@ -26,21 +28,11 @@ st.set_page_config(
     page_title="SOC Analyzer Dashboard",
     page_icon="🛡️",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="expanded"
 )
 
 def render_sidebar():
     with st.sidebar:
-        st.markdown("Idioma / language ")
-        lang_label = st.selectbox(
-            "Seleccionar idioma / select languaje",
-            ["ES", "EN"]
-        )
-
-        st.session_state["lang"] = "es" if lang_label == "ES" else "EN"
-
-        st.markdown("---")
-
         st.markdown("⚙️ Configuración")
         st.write("Sube un csv: ")
         
@@ -370,33 +362,38 @@ def render_tabs(df_logs, results):
 
     with tab6:
         st.subheader("🔁 Password Spraying")
-        st.write("Aquí estará la detección Password Spraying")
+        st.write("Aquí estar la detección Password Spraying")
 
     with tab7:
         st.subheader("🤖 SOC Copilot IA")
         st.caption("Genera un alnalisis a partir de las detecciones actuales")
         st.divider()
 
-        # if df_logs is None:
-        #     st.info("Sube primero un csv de logs en la barra lateral")
-        # elif not results:
-        #     st.info("NO hayresultados de detecciones para analizar todavia")
-        # else:
-        #     with st.expander(
-        #         "Ver resumen tecnico que se enviará a la IA",
-        #         expanded=False
-        #     ):
+        client = get_openai_client()
 
-        #         summary_preview = build_soc_summary(results)
-        #         st.text(summary_preview)
+        if client is None:
+            st.info("SOC Copilot está deshabilitado, falta la API Key")
 
-        #         if st.button("Generar analisis con IA"):
-        #             with st.spinner("Analizando detecciones con SOC copilot..."):
-        #                 summary_text = build_soc_summary(results)
-        #                 ia_response = ask_soc_copilot(summary_text)
+        if df_logs is None:
+            st.info("Sube primero un csv de logs en la barra lateral")
+        elif not results:
+            st.info("NO hayresultados de detecciones para analizar todavia")
+        else:
+            with st.expander(
+                "Ver resumen tecnico que se enviará a la IA",
+                expanded=False
+            ):
 
-        #                 st.markdown("Informe generado por SOC copilot")
-        #                 st.markdown(ia_response)
+                summary_preview = build_soc_summary(results)
+                st.text(summary_preview)
+
+                if st.button("Generar analisis con IA"):
+                    with st.spinner("Analizando detecciones con SOC copilot..."):
+                        summary_text = build_soc_summary(results)
+                        ia_response = ask_soc_copilot(summary_text)
+
+                        st.markdown("Informe generado por SOC copilot")
+                        st.markdown(ia_response)
 
 def run_detections(
         df_logs, 
