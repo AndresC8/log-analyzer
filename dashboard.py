@@ -41,7 +41,7 @@ def render_sidebar():
             help="Cargar logs"
         )
 
-        use_demo = st.sidebar.checkbox("Usar dataset de demostración", value=True)
+        use_demo = st.sidebar.checkbox("Usar dataset de ejemplo", value=True)
 
         st.markdown("---")
         st.subheader("Parámetros de detección")
@@ -430,8 +430,6 @@ def validate_auth_schema(df: pd.DataFrame):
 
 
 df_logs = load_logs(uploaded_file, use_demo)
-
-
 
 render_header()
 
