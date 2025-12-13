@@ -1,23 +1,23 @@
-from typing import Dict, Any, Optional
+from typing import Optional, Dict, Any
 import os
-from openai import OpenAI
+
 try:
-    import streamlit as st
+    from openai import OpenAI
 except Exception:
-    st = None
+    OpenAI = None
 
-def get_openai_client() -> Optional["OpenAI"]:
-    api_key = None
-    if st is not None:
-        api_key = st.secrets.get("OPENAI_API_KEY", None)
 
-    if not api_key:
-        api_key = os.getenv("OPENAI_API_KEY")
+def get_openai_client():
+    if OpenAI is None:
+        return None
 
+    api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         return None
-    
+
     return OpenAI(api_key=api_key)
+
+
 
 def build_soc_summary(results: Dict[str, Any]):
     """
