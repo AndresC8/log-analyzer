@@ -17,7 +17,7 @@ def detect_bruteforce(
     pd.DataFrame
         DataFrame with columns like: source_ip, failures.
     """
-    #1
+
     df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
     
     failed = df[df["event_type"] == "login_failed"]
